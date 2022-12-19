@@ -61,12 +61,6 @@ python eval.py \ # eval.py 내의 model을 정의하는 코드 수정
     --pretrain {pretrain 모델 dir의 path}
 ```
 
-- 최종 산출물
-    - val set에 대한 evaluation 결과
-        - 전체 mIoU
-        - 전체 Accuracy
-        - label별 mIoU
-
 - FLOPs, 파라미터 개수 확인
 
 ```bash
