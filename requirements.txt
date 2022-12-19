@@ -3,3 +3,4 @@ pandas
 albumentations
 timm
 transformers
+mmcv

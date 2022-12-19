@@ -1,6 +1,8 @@
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
 import os
+import sys
+
 import argparse
 import datetime
 import numpy as np
@@ -16,8 +18,8 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler, get_state_dict, ModelEma
-
-from ..segformer import SegformerForImageClassification, SegformerConfig
+sys.path.append('/root/Naver_BoostCamp_NOTA/')
+from segformer import SegformerForImageClassification, SegformerConfig
 from datasets import build_dataset
 from engine import train_one_epoch, evaluate
 from losses import DistillationLoss
@@ -247,7 +249,15 @@ def main(args):
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
 
     print(f"Creating model: {args.model}")
-    model = SegformerForImageClassification(SegformerConfig())
+    with open(os.path.join('imagenet_id2label.json'), 'r') as f:
+        id2label = json.load(f)
+    id2label = {int(k): v for k, v in id2label.items()}
+    label2id = {v: k for k, v in id2label.items()}
+    model = SegformerForImageClassification(SegformerConfig(
+        num_labels=len(id2label), 
+        id2label=id2label, 
+        label2id=label2id
+    ))
    
     if args.finetune:
         if args.finetune.startswith('https'):

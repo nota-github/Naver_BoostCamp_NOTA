@@ -14,8 +14,6 @@ from timm.utils import accuracy, ModelEma
 
 from losses import DistillationLoss
 import utils
-import pdb
-import wandb
 
 
 def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
@@ -97,9 +95,4 @@ def evaluate(data_loader, model, device):
     metric_logger.synchronize_between_processes()
     print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
           .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
-    wandb.log({
-            "Test Acc@1": round(metric_logger.acc1.global_avg, 4),
-            "Test Acc@5": round(metric_logger.acc5.global_avg, 4),
-            "Test Loss": round(metric_logger.loss.global_avg, 4),
-        })
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
