@@ -1,0 +1,13 @@
+__pycache__/
+result/
+.ipynb_checkpoints/
+*.ipynb
+*.pt
+*.onnx
+*.tar
+*.csv
+*.whl
+*.engine
+
+
+
