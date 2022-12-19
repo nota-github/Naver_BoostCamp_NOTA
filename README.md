@@ -15,11 +15,7 @@ docker build -t notadockerhub/boostcamp:latest -f ./Dockerfile .
 ```
 ### Training
 1. 데이터셋 준비
-```bash
-wget http://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip
-
-unzip ADEChallengeData2016.zip
-```
+[ADE20K](https://drive.google.com/file/d/1cBd9z93CfI6v-fsIHqLc58fVEH2urJyx/view?usp=share_link)
 
 2. 모델을 구동할 도커 컨테이너 생성하기
 ```bash
