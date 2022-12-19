@@ -32,7 +32,7 @@ def main():
     
     evaluate(eval_loader, model, opt, dev)
 
-def evaluate(loader, model, opt, dev):
+def evaluate(loader, model, dev):
     num_labels = model.config.num_labels
     hist = np.zeros((num_labels, num_labels))
     for inputs in tqdm(loader):

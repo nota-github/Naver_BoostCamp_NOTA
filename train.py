@@ -86,7 +86,7 @@ def main(opt):
     # logging.info(f"Training config: \n{opt}")
     
     torch.manual_seed(opt.seed)
-    dev = torch.device("cuda:{}".format(opt.gpu) if torch.cuda.is_available() else "cpu")
+    dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(os.path.join(opt.data_dir, 'id2label.json'), 'r') as f:
         id2label = json.load(f)
     id2label = {int(k): v for k, v in id2label.items()}
@@ -100,7 +100,7 @@ def main(opt):
             label2id=label2id, 
             ignore_mismatched_sizes=True)
     )
-    ### imagenet pretrain training
+    ### fine-tuning
     # model = SegformerForSemanticSegmentation.from_pretrained(
     #     opt.pretrain, 
     #     num_labels=len(id2label),
@@ -111,26 +111,41 @@ def main(opt):
     
     model = model.to(dev)
     model = nn.DataParallel(model).to(dev)
-
     params = []
-    for layer, param in model.named_parameters(recurse=True):
-        lr = opt.lr
+    ### from scratch
+    for _, param in model.named_parameters(recurse=True):
+        lr = opt.lr * 10
         decay = opt.weight_decay
-        if 'norm' in layer:
-            decay = 0.0
-        if 'decode' in layer:
-            lr = opt.lr * 10.0
         params.append({'params': param, 'lr': lr, 'weight_decay': decay})
+
+    ### fine-tuning
+    # for layer, param in model.named_parameters(recurse=True):
+    #     lr = opt.lr
+    #     decay = opt.weight_decay
+    #     if 'norm' in layer:
+    #         decay = 0.0
+    #     if 'decode' in layer:
+    #         lr = opt.lr * 10.0
+    #     params.append({'params': param, 'lr': lr, 'weight_decay': decay})
+
+
+    optimizer = torch.optim.AdamW(
+        params,
+        lr=opt.lr,
+        weight_decay=opt.weight_decay
+    )
+    epochs = opt.epochs
+    scheduler = get_polynomial_decay_schedule_with_warmup(
+            optimizer=optimizer,
+            num_warmup_steps=opt.warmup_steps,
+            num_training_steps=int(len(train_loader) * epochs),
+            lr_end=0.0,
+            power=1,
+        )
     train_loader = generate_loader(opt, 'train')
     val_loader = generate_loader(opt, 'val')
     logging.info(f"Number of training images: {len(train_loader.dataset)}")
     logging.info(f"Number of validation images: {len(val_loader.dataset)}")
-    
-    epochs = opt.epochs
-    
-    if dev is None:
-        dev = torch.device("cuda:{}".format(opt.gpu) if torch.cuda.is_available() else "cpu")
-    
     logging.debug(f"Computation device: {dev}")
     logging.info(f"Epochs to train for: {epochs}\n")
 
@@ -143,18 +158,6 @@ def main(opt):
         p.numel() for p in model.parameters() if p.requires_grad)
     logging.info(f"{total_trainable_params:,} training parameters.")
     
-    optimizer = torch.optim.AdamW(
-        params,
-        lr=opt.lr,
-        weight_decay=opt.weight_decay
-    )
-    scheduler = get_polynomial_decay_schedule_with_warmup(
-            optimizer=optimizer,
-            num_warmup_steps=opt.warmup_steps,
-            num_training_steps=int(len(train_loader) * epochs),
-            lr_end=0.0,
-            power=1,
-        )
     best_val_miou = 0.0
     train_loss, val_loss = [], []
     train_miou, val_miou = [], []
@@ -164,14 +167,12 @@ def main(opt):
     elapsed_time_one_epoch = None
     for epoch in range(epochs):
         logging.info(f"Epoch {epoch+1} of {epochs}")
-        # if epoch == 1:
         time_one_epoch_start = time.time()
         train_epoch_loss, train_epoch_miou, train_epoch_lr = \
             train(model, train_loader, optimizer, scheduler, num_labels,dev)
         val_epoch_loss, val_epoch_miou, val_epoch_miou_by_class = \
             validate(model, val_loader, num_labels, category_names, dev)
 
-        # if epoch == 1:
         time_one_epoch_end = time.time()
         elapsed_time_one_epoch = int(time_one_epoch_end - time_one_epoch_start)
         
@@ -196,23 +197,22 @@ def main(opt):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--device', type=str, default='0, 1', help='Select gpu to use')
-    parser.add_argument('--lr', type=float, default=6e-5)
+    parser.add_argument('--device', type=str, default='0,1', help='Select gpu to use')
+    parser.add_argument('--lr', type=float, default=6e-5) # do not modify
     parser.add_argument('--pretrain', type=str, default='nvidia/mit-b2')
     parser.add_argument('--save_path', type=str, default='result/')
-    parser.add_argument('--num_workers', type=int, default=4)
-    parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--epochs', type=int, default=250)
-    parser.add_argument('--warmup_steps', type=int, default=1500)
-    parser.add_argument('--weight_decay', type=float, default=0.01)                    
-    parser.add_argument('--data_dir', type=str, default="/dataset_path")
+    parser.add_argument('--num_workers', type=int, default=4) # do not modify
+    parser.add_argument('--seed', type=int, default=1) # do not modify
+    parser.add_argument('--batch_size', type=int, default=16) # do not modify
+    parser.add_argument('--epochs', type=int, default=120) # do not modify
+    parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
+    parser.add_argument('--weight_decay', type=float, default=0.01) # do not modify      
+    parser.add_argument('--data_dir', type=str, default="/dataset_path") 
     parser.add_argument(
         '--log-level', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         dest='log_level', default='INFO',
         help='logging level for the trainer'
-    )
+    ) # do not modify
     opt = parser.parse_args()
 
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.device
