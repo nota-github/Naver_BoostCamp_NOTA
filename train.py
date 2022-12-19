@@ -10,7 +10,6 @@ from util.data import generate_loader
 from torch import nn
 
 from segformer import SegformerForSemanticSegmentation, SegformerConfig
-# from util.model import made_segformer
 import time
 import importlib
 from tqdm.auto import tqdm
@@ -92,7 +91,8 @@ def main(opt):
         id2label = json.load(f)
     id2label = {int(k): v for k, v in id2label.items()}
     label2id = {v: k for k, v in id2label.items()}
-    # from scratch training
+
+    ### from scratch training
     model = SegformerForSemanticSegmentation(
         SegformerConfig(
             num_labels=len(id2label), 
@@ -100,7 +100,7 @@ def main(opt):
             label2id=label2id, 
             ignore_mismatched_sizes=True)
     )
-    # imagenet pretrain training
+    ### imagenet pretrain training
     # model = SegformerForSemanticSegmentation.from_pretrained(
     #     opt.pretrain, 
     #     num_labels=len(id2label),
