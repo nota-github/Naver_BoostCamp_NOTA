@@ -363,8 +363,7 @@ def main(args):
             set_training_mode=args.finetune == '',  # keep in eval mode during finetuning
             fp32=args.fp32_resume
         )
-        if not args.scratch:
-            lr_scheduler.step(epoch)
+        lr_scheduler.step(epoch)
         
         if args.output_dir:
             # model.module.save_pretrained(os.path.join(args.output_dir, str(epoch)))
