@@ -15,11 +15,16 @@ docker build -t notadockerhub/boostcamp:latest -f ./Dockerfile .
 ```
 ### Training
 1. 데이터셋 준비
-[ADE20K](https://drive.google.com/file/d/1cBd9z93CfI6v-fsIHqLc58fVEH2urJyx/view?usp=share_link)
+[ADE20K](https://drive.google.com/file/d/1cBd9z93CfI6v-fsIHqLc58fVEH2urJyx/view?usp=share_link), ImageNet
+```
+dataset
+    |--ADE20K
+    |--ImageNet
+```
 
 2. 모델을 구동할 도커 컨테이너 생성하기
 ```bash
-docker run --name {container_name} --shm-size={usable memory} -it --gpus all -v /{ade20k가 들어가 있는 dir}:/root/datasets notadockerhub/boostcamp:latest
+docker run --name {container_name} --shm-size={usable memory} -it --gpus all -v /{위 dataset dir의 path}:/root/datasets notadockerhub/boostcamp:latest
 
 # example(dataset/ADEChallengeData2016)
 docker run --name segformer_challenge --shm-size=8g -it --gpus all -v /root/dataset/:/root/datasets notadockerhub/boostcamp:latest
