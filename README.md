@@ -40,7 +40,7 @@ python train.py \
     --save_path {save하고자 하는 dir의 path} \ 
     --pretrain {pretrain 모델 dir 혹은 .pth의 path} # fine-tuning일 경우 기입
     --batch_size {batch size} # default=16
-    --from_scratch {True or False} # finetuning을 하는 경우 True, 아니면 False,  default=False
+    --from_scratch # training from_scratch 시에 기입
 ```
 
 ### ImageNet Training

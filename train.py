@@ -19,7 +19,6 @@ from transformers.optimization import get_polynomial_decay_schedule_with_warmup
 
 import torch.nn.functional as F
 
-
 def train(model, train_loader, optimizer, scheduler, num_labels, dev=None):
     model.train()
     logging.info('Training')
@@ -84,16 +83,16 @@ def validate(model, val_loader, num_labels, category_names, dev=None):
 def main(opt):
     
     # logging.info(f"Training config: \n{opt}")
-    
     torch.manual_seed(opt.seed)
     dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     with open(os.path.join(opt.data_dir, 'id2label.json'), 'r') as f:
         id2label = json.load(f)
     id2label = {int(k): v for k, v in id2label.items()}
     label2id = {v: k for k, v in id2label.items()}
-
+    
     ### training from scratch 
     if opt.from_scratch:
+        logging.info("training from scratch")
         model = SegformerForSemanticSegmentation(
             SegformerConfig(
                 num_labels=len(id2label), 
@@ -106,6 +105,7 @@ def main(opt):
     else:
         # dir version
         if os.path.isdir(opt.pretrain)==True:
+            logging.info("fine-tuning dir")
             model = SegformerForSemanticSegmentation.from_pretrained(
                 opt.pretrain, 
                 num_labels=len(id2label),
@@ -115,10 +115,12 @@ def main(opt):
             )
         # .pth file version
         else:
+            logging.info("fine-tuning .pth")
+            pt = torch.load(opt.pretrain, map_location='cpu')
+            torch.save(pt['model'], opt.pretrain)
             model = SegformerForSemanticSegmentation.from_pretrained(
-                None,
                 opt.pretrain, 
-                SegformerConfig(
+                config=SegformerConfig(
                     num_labels=len(id2label), 
                     id2label=id2label, 
                     label2id=label2id, 
@@ -225,7 +227,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=1) # do not modify
     parser.add_argument('--batch_size', type=int, default=16) 
     parser.add_argument('--epochs', type=int, default=120) # do not modify
-    parser.add_argument('--from_scratch', type=bool, default=True)
+    parser.add_argument('--from_scratch', action='store_true', help='training from scratch')
     parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
     parser.add_argument('--weight_decay', type=float, default=0.01) # do not modify      
     parser.add_argument('--data_dir', type=str, default="/dataset_path") 
