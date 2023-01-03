@@ -27,6 +27,7 @@ from samplers import RASampler
 # import models
 import utils
 import collections
+import pdb
 
 def get_args_parser():
     parser = argparse.ArgumentParser('PVT training and evaluation script', add_help=False)
@@ -143,7 +144,7 @@ def get_args_parser():
     # Dataset parameters
     parser.add_argument('--data-path', default='/datasets01/imagenet_full_size/061417/', type=str,
                         help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'INAT', 'INAT19'],
+    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'TINY', 'IMNET', 'INAT', 'INAT19'],
                         type=str, help='Image Net dataset path')
     parser.add_argument('--use-mcloader', action='store_true', default=False, help='Use mcloader')
     parser.add_argument('--inat-category', default='name',
@@ -165,7 +166,7 @@ def get_args_parser():
                         help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     parser.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
                         help='')
-    parser.set_defaults(pin_mem=True)
+    parser.set_defaults(pin_mem=False)
 
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
@@ -193,7 +194,7 @@ def main(args):
 
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, _ = build_dataset(is_train=False, args=args)
-
+    
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()
@@ -239,7 +240,6 @@ def main(args):
         pin_memory=args.pin_mem,
         drop_last=False
     )
-
     mixup_fn = None
     mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
     if mixup_active:
@@ -249,14 +249,14 @@ def main(args):
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
 
     print(f"Creating model: {args.model}")
-    with open(os.path.join('imagenet_id2label.json'), 'r') as f:
-        id2label = json.load(f)
-    id2label = {int(k): v for k, v in id2label.items()}
-    label2id = {v: k for k, v in id2label.items()}
+    # with open(os.path.join('imagenet_id2label.json'), 'r') as f:
+    #     id2label = json.load(f)
+    # id2label = {int(k): v for k, v in id2label.items()}
+    # label2id = {v: k for k, v in id2label.items()}
     model = SegformerForImageClassification(SegformerConfig(
-        num_labels=len(id2label), 
-        id2label=id2label, 
-        label2id=label2id
+        num_labels=args.nb_classes, 
+        # id2label=id2label, 
+        # label2id=label2id
     ))
    
     if args.finetune:

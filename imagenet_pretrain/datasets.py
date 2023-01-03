@@ -70,6 +70,17 @@ def build_dataset(is_train, args):
                 pipeline=transform
             )
         nb_classes = 1000
+    elif args.data_set =='TINY':
+        if not args.use_mcloader:
+            root = os.path.join(args.data_path, 'train' if is_train else 'val')
+            dataset = datasets.ImageFolder(root, transform=transform)
+        else:
+            dataset = ClassificationDataset(
+                'train' if is_train else 'val',
+                pipeline=transform
+            )
+        nb_classes = 200
+            
     elif args.data_set == 'INAT':
         dataset = INatDataset(args.data_path, train=is_train, year=2018,
                               category=args.inat_category, transform=transform)

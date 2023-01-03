@@ -92,41 +92,60 @@ def main(opt):
     id2label = {int(k): v for k, v in id2label.items()}
     label2id = {v: k for k, v in id2label.items()}
 
-    ### from scratch training
-    model = SegformerForSemanticSegmentation(
-        SegformerConfig(
-            num_labels=len(id2label), 
-            id2label=id2label, 
-            label2id=label2id, 
-            ignore_mismatched_sizes=True)
-    )
+    ### training from scratch 
+    if opt.from_scratch:
+        model = SegformerForSemanticSegmentation(
+            SegformerConfig(
+                num_labels=len(id2label), 
+                id2label=id2label, 
+                label2id=label2id, 
+                ignore_mismatched_sizes=True)
+        )
+        
     ### fine-tuning
-    # model = SegformerForSemanticSegmentation.from_pretrained(
-    #     opt.pretrain, 
-    #     num_labels=len(id2label),
-    #     id2label=id2label,
-    #     label2id=label2id,
-    #     ignore_mismatched_sizes=True
-    # )
+    else:
+        # dir version
+        if os.path.isdir(opt.pretrain)==True:
+            model = SegformerForSemanticSegmentation.from_pretrained(
+                opt.pretrain, 
+                num_labels=len(id2label),
+                id2label=id2label,
+                label2id=label2id,
+                ignore_mismatched_sizes=True
+            )
+        # .pth file version
+        else:
+            model = SegformerForSemanticSegmentation.from_pretrained(
+                None,
+                opt.pretrain, 
+                SegformerConfig(
+                    num_labels=len(id2label), 
+                    id2label=id2label, 
+                    label2id=label2id, 
+                    ignore_mismatched_sizes=True)
+            )
     
     model = model.to(dev)
     model = nn.DataParallel(model).to(dev)
     params = []
-    ### from scratch
-    for _, param in model.named_parameters(recurse=True):
-        lr = opt.lr * 10
-        decay = opt.weight_decay
-        params.append({'params': param, 'lr': lr, 'weight_decay': decay})
+    
+    ### training from scratch
+    if opt.from_scratch:
+        for _, param in model.named_parameters(recurse=True):
+            lr = opt.lr * 10
+            decay = opt.weight_decay
+            params.append({'params': param, 'lr': lr, 'weight_decay': decay})
 
     ### fine-tuning
-    # for layer, param in model.named_parameters(recurse=True):
-    #     lr = opt.lr
-    #     decay = opt.weight_decay
-    #     if 'norm' in layer:
-    #         decay = 0.0
-    #     if 'decode' in layer:
-    #         lr = opt.lr * 10.0
-    #     params.append({'params': param, 'lr': lr, 'weight_decay': decay})
+    else:
+        for layer, param in model.named_parameters(recurse=True):
+            lr = opt.lr
+            decay = opt.weight_decay
+            if 'norm' in layer:
+                decay = 0.0
+            if 'decode' in layer:
+                lr = opt.lr * 10.0
+            params.append({'params': param, 'lr': lr, 'weight_decay': decay})
 
 
     optimizer = torch.optim.AdamW(
@@ -135,6 +154,9 @@ def main(opt):
         weight_decay=opt.weight_decay
     )
     epochs = opt.epochs
+    
+    train_loader = generate_loader(opt, 'train')
+    val_loader = generate_loader(opt, 'val')
     scheduler = get_polynomial_decay_schedule_with_warmup(
             optimizer=optimizer,
             num_warmup_steps=opt.warmup_steps,
@@ -142,8 +164,6 @@ def main(opt):
             lr_end=0.0,
             power=1,
         )
-    train_loader = generate_loader(opt, 'train')
-    val_loader = generate_loader(opt, 'val')
     logging.info(f"Number of training images: {len(train_loader.dataset)}")
     logging.info(f"Number of validation images: {len(val_loader.dataset)}")
     logging.debug(f"Computation device: {dev}")
@@ -205,6 +225,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=1) # do not modify
     parser.add_argument('--batch_size', type=int, default=16) # do not modify
     parser.add_argument('--epochs', type=int, default=120) # do not modify
+    parser.add_argument('--from_scratch', type=bool, default=True)
     parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
     parser.add_argument('--weight_decay', type=float, default=0.01) # do not modify      
     parser.add_argument('--data_dir', type=str, default="/dataset_path") 
