@@ -223,7 +223,7 @@ def parse_args():
     parser.add_argument('--save_path', type=str, default='result/')
     parser.add_argument('--num_workers', type=int, default=4) # do not modify
     parser.add_argument('--seed', type=int, default=1) # do not modify
-    parser.add_argument('--batch_size', type=int, default=16) # do not modify
+    parser.add_argument('--batch_size', type=int, default=16) 
     parser.add_argument('--epochs', type=int, default=120) # do not modify
     parser.add_argument('--from_scratch', type=bool, default=True)
     parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
