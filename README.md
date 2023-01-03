@@ -51,16 +51,17 @@ python train.py \
 
 3. training
 ```bash
-sh dist_train.sh {사용하는 gpu 개수} \
+bash dist_train.sh {사용하는 gpu 개수} \
     --data-path {imagenet path} \
     --output_dir {save dir path} \
     --batch-size {batch size per gpu } # default=128
 
 # example
-sh dist_train.sh 4 \
+bash dist_train.sh 4 \
     --data-path /workspace/imagenet \
     --output_dir result/mod_segformer/ \
     --batch-size 64
+
 ```
 
 ### Evaluation & FLOPs, 파라미터 개수 확인
