@@ -38,8 +38,9 @@ python train.py \
     --data_dir {ADE20K의 path} \
     --device 0,1,2,3 \ # 환경에 맞게 수정 
     --save_path {save하고자 하는 dir의 path} \ 
-    --pretrain {pretrain 모델 dir의 path} # fine-tuning일 경우 기입
+    --pretrain {pretrain 모델 dir 혹은 .pth의 path} # fine-tuning일 경우 기입
     --batch_size {batch size} # default=16
+    --from_scratch {True or False} # finetuning을 하는 경우 True, 아니면 False,  default=False
 ```
 
 ### ImageNet Training
