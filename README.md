@@ -31,37 +31,38 @@ docker run --name segformer_challenge --shm-size=8g -it --gpus all -v /root/data
 ```
 
 3. 학습 시작
+    - tiny_imagenet Pretraining
+    ```bash
+    bash dist_train.sh {사용하는 gpu 개수} \
+        --data-path {tiny_imagenet path} \ # 이름에 tiny가 포함되어야함
+        --output_dir {save dir path} \
+        --batch-size {batch size per gpu } # default=128
 
-```bash
-# 현재 디렉토리: /root/Naver_BoostCamp_NOTA
-python train.py \
-    --data_dir {ADE20K의 path} \
-    --device 0,1,2,3 \ # 환경에 맞게 수정 
-    --save_path {save하고자 하는 dir의 path} \ 
-    --pretrain {pretrain 모델 dir 혹은 .pth의 path} # fine-tuning일 경우 기입
-    --batch_size {batch size} # default=16
-```
+    # example
+    bash dist_train.sh 4 \
+        --data-path /workspace/dataset/tiny_imagenet \
+        --output_dir result/mod_segformer/ \
+        --batch-size 64
 
-### Tiny_ImageNet Training
+    ```
+    - ADE20K fine-tuning
+    ```bash
+    # 현재 디렉토리: /root/Naver_BoostCamp_NOTA
+    python train.py \
+        --data_dir {ADE20K의 path} \
+        --device 0,1,2,3 \ # 환경에 맞게 수정 
+        --save_path {save하고자 하는 dir의 path} \ 
+        --pretrain {pretrain 모델 dir 혹은 .pth의 path} # .pth(pretrain의 output), dir(huggingface의 모델허브에서 제공하는 형태)
+        --batch_size {batch size} # default=16
+    ```
+
+### 모델 수정
 
 1. segformer 모델 import 부분 수정(필요시)
 - [main.py 22th line](https://github.com/nota-github/Naver_BoostCamp_NOTA/blob/main/imagenet_pretrain/main.py#L22) 
 - [main.py 256th line](https://github.com/nota-github/Naver_BoostCamp_NOTA/blob/main/imagenet_pretrain/main.py#L256)
 
-2. training
-```bash
-bash dist_train.sh {사용하는 gpu 개수} \
-    --data-path {tiny_imagenet path} \ # 이름에 tiny가 포함되어야함
-    --output_dir {save dir path} \
-    --batch-size {batch size per gpu } # default=128
 
-# example
-bash dist_train.sh 4 \
-    --data-path /workspace/dataset/tiny_imagenet \
-    --output_dir result/mod_segformer/ \
-    --batch-size 64
-
-```
 
 ### Evaluation & FLOPs, 파라미터 개수 확인
 - evaluate 수행
