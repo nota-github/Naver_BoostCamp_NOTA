@@ -52,7 +52,7 @@ python train.py \
 2. training
 ```bash
 bash dist_train.sh {사용하는 gpu 개수} \
-    --data-path {imagenet path} \
+    --data-path {tiny_imagenet path} \ # 이름에 tiny가 포함되어야함
     --output_dir {save dir path} \
     --batch-size {batch size per gpu } # default=128
 
