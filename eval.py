@@ -1,7 +1,4 @@
-import os
 import numpy as np
-import cv2
-import json
 import torch
 from tqdm.auto import tqdm
 import torch.nn as nn
@@ -10,7 +7,6 @@ from util.data import generate_loader
 from util.utils import label_accuracy_score, add_hist
 from segformer import SegformerForSemanticSegmentation
 import argparse
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -29,8 +25,7 @@ def main():
     eval_loader = generate_loader(opt, 'val')
     model.eval()
     model = model.to(dev)
-    
-    evaluate(eval_loader, model, opt, dev)
+    evaluate(eval_loader, model, dev)
 
 def evaluate(loader, model, dev):
     num_labels = model.config.num_labels

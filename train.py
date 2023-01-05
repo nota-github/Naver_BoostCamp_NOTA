@@ -1,23 +1,21 @@
 import os
 import json
+import time
+import torch
+import logging
 import argparse
 from transformers import logging
 logging.set_verbosity_error()
-import logging
-import torch
+import numpy as np
+from torch import nn
+from tqdm.auto import tqdm
+
 from util.logger import set_logger
 from util.data import generate_loader
-from torch import nn
-
-from segformer import SegformerForSemanticSegmentation, SegformerConfig
-import time
-import importlib
-from tqdm.auto import tqdm
 from util.utils import label_accuracy_score, add_hist
-import numpy as np
+from segformer import SegformerForSemanticSegmentation, SegformerConfig
 from transformers.optimization import get_polynomial_decay_schedule_with_warmup
 
-import torch.nn.functional as F
 
 def train(model, train_loader, optimizer, scheduler, num_labels, dev=None):
     model.train()
@@ -223,10 +221,10 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=6e-5) # do not modify
     parser.add_argument('--pretrain', type=str, default='nvidia/mit-b2')
     parser.add_argument('--save_path', type=str, default='result/')
-    parser.add_argument('--num_workers', type=int, default=4) # do not modify
+    parser.add_argument('--num_workers', type=int, default=4) 
     parser.add_argument('--seed', type=int, default=1) # do not modify
     parser.add_argument('--batch_size', type=int, default=16) 
-    parser.add_argument('--epochs', type=int, default=120) # do not modify
+    parser.add_argument('--epochs', type=int, default=60) # do not modify
     parser.add_argument('--from_scratch', action='store_true', help='training from scratch')
     parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
     parser.add_argument('--weight_decay', type=float, default=0.01) # do not modify      

@@ -15,11 +15,11 @@ docker build -t notadockerhub/boostcamp:latest -f ./Dockerfile .
 ```
 ### Training
 1. 데이터셋 준비
-[ADE20K](https://drive.google.com/file/d/1cBd9z93CfI6v-fsIHqLc58fVEH2urJyx/view?usp=share_link), ImageNet
+[ADE20K](https://drive.google.com/file/d/1cBd9z93CfI6v-fsIHqLc58fVEH2urJyx/view?usp=share_link), [Tiny_ImageNet](https://drive.google.com/file/d/1_u0FdFTRT1oMwkDee4gpKxebeL_4WMpe/view?usp=share_link)
 ```
 dataset
     |--ADE20K
-    |--ImageNet
+    |--Tiny_ImageNet
 ```
 
 2. 모델을 구동할 도커 컨테이너 생성하기
@@ -43,14 +43,13 @@ python train.py \
     --from_scratch # training from_scratch 시에 기입
 ```
 
-### ImageNet Training
-1. ImageNet download
+### Tiny_ImageNet Training
 
-2. segformer 모델 import 부분 수정(필요시)
+1. segformer 모델 import 부분 수정(필요시)
 - [main.py 22th line](https://github.com/nota-github/Naver_BoostCamp_NOTA/blob/main/imagenet_pretrain/main.py#L22) 
 - [main.py 256th line](https://github.com/nota-github/Naver_BoostCamp_NOTA/blob/main/imagenet_pretrain/main.py#L256)
 
-3. training
+2. training
 ```bash
 bash dist_train.sh {사용하는 gpu 개수} \
     --data-path {imagenet path} \
@@ -59,7 +58,7 @@ bash dist_train.sh {사용하는 gpu 개수} \
 
 # example
 bash dist_train.sh 4 \
-    --data-path /workspace/imagenet \
+    --data-path /workspace/dataset/tiny_imagenet \
     --output_dir result/mod_segformer/ \
     --batch-size 64
 
@@ -71,7 +70,7 @@ bash dist_train.sh 4 \
 ```bash
 # phase를 통해 val 또는 test set 설정
 python eval.py \ # eval.py 내의 model을 정의하는 코드 수정
-	--data_dir {ADE20K의 path} \
+    --data_dir {ADE20K의 path} \
     --pretrain {pretrain 모델 dir의 path}
 ```
 
