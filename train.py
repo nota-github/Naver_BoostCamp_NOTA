@@ -4,8 +4,6 @@ import time
 import torch
 import logging
 import argparse
-from transformers import logging
-logging.set_verbosity_error()
 import numpy as np
 from torch import nn
 from tqdm.auto import tqdm
@@ -87,65 +85,44 @@ def main(opt):
         id2label = json.load(f)
     id2label = {int(k): v for k, v in id2label.items()}
     label2id = {v: k for k, v in id2label.items()}
-    
-    ### training from scratch 
-    if opt.from_scratch:
-        logging.info("training from scratch")
-        model = SegformerForSemanticSegmentation(
-            SegformerConfig(
+        
+    # dir version
+    if os.path.splitext(opt.pretrain)[-1] == '.pth':
+        logging.info("fine-tuning .pth")
+        pt = torch.load(opt.pretrain, map_location='cpu')
+        torch.save(pt['model'], opt.pretrain)
+        model = SegformerForSemanticSegmentation.from_pretrained(
+            opt.pretrain, 
+            config=SegformerConfig(
                 num_labels=len(id2label), 
                 id2label=id2label, 
                 label2id=label2id, 
                 ignore_mismatched_sizes=True)
         )
-        
-    ### fine-tuning
+    # .pth file version
     else:
-        # dir version
-        if os.path.isdir(opt.pretrain)==True:
-            logging.info("fine-tuning dir")
-            model = SegformerForSemanticSegmentation.from_pretrained(
-                opt.pretrain, 
-                num_labels=len(id2label),
-                id2label=id2label,
-                label2id=label2id,
-                ignore_mismatched_sizes=True
-            )
-        # .pth file version
-        else:
-            logging.info("fine-tuning .pth")
-            pt = torch.load(opt.pretrain, map_location='cpu')
-            torch.save(pt['model'], opt.pretrain)
-            model = SegformerForSemanticSegmentation.from_pretrained(
-                opt.pretrain, 
-                config=SegformerConfig(
-                    num_labels=len(id2label), 
-                    id2label=id2label, 
-                    label2id=label2id, 
-                    ignore_mismatched_sizes=True)
-            )
+        logging.info("fine-tuning dir")
+        model = SegformerForSemanticSegmentation.from_pretrained(
+            opt.pretrain, 
+            num_labels=len(id2label),
+            id2label=id2label,
+            label2id=label2id,
+            ignore_mismatched_sizes=True
+        )
     
     model = model.to(dev)
     model = nn.DataParallel(model).to(dev)
     params = []
     
-    ### training from scratch
-    if opt.from_scratch:
-        for _, param in model.named_parameters(recurse=True):
-            lr = opt.lr * 10
-            decay = opt.weight_decay
-            params.append({'params': param, 'lr': lr, 'weight_decay': decay})
-
-    ### fine-tuning
-    else:
-        for layer, param in model.named_parameters(recurse=True):
-            lr = opt.lr
-            decay = opt.weight_decay
-            if 'norm' in layer:
-                decay = 0.0
-            if 'decode' in layer:
-                lr = opt.lr * 10.0
-            params.append({'params': param, 'lr': lr, 'weight_decay': decay})
+   
+    for layer, param in model.named_parameters(recurse=True):
+        lr = opt.lr
+        decay = opt.weight_decay
+        if 'norm' in layer:
+            decay = 0.0
+        if 'decode' in layer:
+            lr = opt.lr * 10.0
+        params.append({'params': param, 'lr': lr, 'weight_decay': decay})
 
 
     optimizer = torch.optim.AdamW(
@@ -225,7 +202,6 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=1) # do not modify
     parser.add_argument('--batch_size', type=int, default=16) 
     parser.add_argument('--epochs', type=int, default=60) # do not modify
-    parser.add_argument('--from_scratch', action='store_true', help='training from scratch')
     parser.add_argument('--warmup_steps', type=int, default=1500) # do not modify
     parser.add_argument('--weight_decay', type=float, default=0.01) # do not modify      
     parser.add_argument('--data_dir', type=str, default="/dataset_path") 
