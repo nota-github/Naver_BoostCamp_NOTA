@@ -86,7 +86,7 @@ def main(opt):
     id2label = {int(k): v for k, v in id2label.items()}
     label2id = {v: k for k, v in id2label.items()}
         
-    # dir version
+    # .pth file version
     if os.path.splitext(opt.pretrain)[-1] == '.pth':
         logging.info("fine-tuning .pth")
         pt = torch.load(opt.pretrain, map_location='cpu')
@@ -99,7 +99,7 @@ def main(opt):
                 label2id=label2id, 
                 ignore_mismatched_sizes=True)
         )
-    # .pth file version
+    # dir version
     else:
         logging.info("fine-tuning dir")
         model = SegformerForSemanticSegmentation.from_pretrained(
