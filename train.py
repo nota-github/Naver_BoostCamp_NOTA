@@ -90,9 +90,10 @@ def main(opt):
     if os.path.splitext(opt.pretrain)[-1] == '.pth':
         logging.info("fine-tuning .pth")
         pt = torch.load(opt.pretrain, map_location='cpu')
-        torch.save(pt['model'], opt.pretrain)
+        dst = opt.pretrain.replace('.pth', '_state_dict.pth')
+        torch.save(pt['model'], dst)
         model = SegformerForSemanticSegmentation.from_pretrained(
-            opt.pretrain, 
+            dst, 
             config=SegformerConfig(
                 num_labels=len(id2label), 
                 id2label=id2label, 
